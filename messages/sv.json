@@ -1,0 +1,212 @@
+{
+  "common": {
+    "aliTrucks": "Ali Trucks",
+    "loading": "Laddar...",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "continue": "Fortsätt",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "submit": "Skicka",
+    "edit": "Redigera",
+    "delete": "Ta bort",
+    "search": "Sök",
+    "filter": "Filtrera",
+    "close": "Stäng"
+  },
+  "auth": {
+    "signIn": "Logga in",
+    "signUp": "Registrera",
+    "signOut": "Logga ut",
+    "email": "E-postadress",
+    "password": "Lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "name": "Fullständigt namn",
+    "forgotPassword": "Glömt lösenord?",
+    "dontHaveAccount": "Har du inget konto?",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "signUpHere": "Registrera dig här",
+    "signInHere": "Logga in här",
+    "createAccount": "Skapa konto",
+    "welcomeBack": "Välkommen tillbaka till Ali Trucks",
+    "joinPlatform": "Gå med i vår lastbilsuthyrningsplattform",
+    "invalidCredentials": "Ogiltig e-post eller lösenord",
+    "signInFailed": "Inloggning misslyckades. Försök igen.",
+    "creatingAccount": "Skapar konto...",
+    "signingIn": "Loggar in..."
+  },
+  "signup": {
+    "title": "Skapa ditt konto",
+    "subtitle": "Gå med i Ali Trucks plattform",
+    "steps": {
+      "roleSelection": {
+        "title": "Rollval",
+        "description": "Välj din kontotyp",
+        "whatDescribesYou": "Vad beskriver dig bäst?",
+        "accountType": "Kontotyp",
+        "buyer": {
+          "title": "Jag vill hyra lastbilar",
+          "description": "Bläddra och hyr fordon"
+        },
+        "seller": {
+          "title": "Jag vill hyra ut lastbilar",
+          "description": "Lista och hantera fordonsuthyrning"
+        },
+        "individual": {
+          "title": "Privatperson",
+          "description": "Perfekt för personligt bruk eller småskalig verksamhet"
+        },
+        "fleet": {
+          "title": "Flotthantering",
+          "description": "För företag som hanterar flera fordon eller storskalig verksamhet"
+        }
+      },
+      "basicInfo": {
+        "title": "Grundläggande information",
+        "description": "Ange dina personliga uppgifter",
+        "nameRequired": "Namn krävs",
+        "emailRequired": "E-post krävs",
+        "validEmail": "Ange en giltig e-postadress",
+        "passwordRequired": "Lösenord krävs",
+        "passwordLength": "Lösenordet måste vara minst 8 tecken långt",
+        "confirmPasswordRequired": "Bekräfta ditt lösenord",
+        "passwordsMatch": "Lösenorden matchar inte",
+        "passwordHint": "Lösenordet måste vara minst 8 tecken långt"
+      },
+      "contactInfo": {
+        "title": "Kontaktinformation",
+        "description": "Ange dina kontaktuppgifter",
+        "phoneNumber": "Telefonnummer",
+        "address": "Gatuadress",
+        "city": "Stad",
+        "country": "Land",
+        "postalCode": "Postnummer",
+        "phoneRequired": "Telefonnummer krävs",
+        "addressRequired": "Adress krävs",
+        "cityRequired": "Stad krävs",
+        "countryRequired": "Land krävs",
+        "postalCodeRequired": "Postnummer krävs"
+      },
+      "companyInfo": {
+        "title": "Företagsinformation",
+        "description": "Ange dina företagsuppgifter för flotthantering",
+        "companyName": "Företagsnamn",
+        "companyNameRequired": "Företagsnamn krävs för flottkonton",
+        "benefits": {
+          "title": "Fördelar med flottkonto",
+          "item1": "Hantera flera fordon från en instrumentpanel",
+          "item2": "Bulkoperationer och rapportering",
+          "item3": "Avancerad analys och insikter",
+          "item4": "Prioriterad kundsupport",
+          "item5": "Anpassade prisalternativ"
+        }
+      },
+      "review": {
+        "title": "Granska",
+        "description": "Granska och bekräfta din information",
+        "reviewTitle": "Granska din information",
+        "reviewSubtitle": "Granska dina uppgifter innan du skapar ditt konto",
+        "accountType": "Kontotyp",
+        "personalInfo": "Personlig information",
+        "contactInfo": "Kontaktinformation",
+        "companyInfo": "Företagsinformation",
+        "role": "Roll",
+        "userType": "Kontotyp",
+        "phone": "Telefon",
+        "address": "Adress",
+        "city": "Stad",
+        "postalCode": "Postnummer",
+        "country": "Land",
+        "companyName": "Företagsnamn",
+        "agreement": "Genom att skapa ett konto godkänner du våra användarvillkor och integritetspolicy."
+      }
+    }
+  },
+  "dashboard": {
+    "buyer": {
+      "title": "Köpare instrumentpanel",
+      "availableTrucks": "Tillgängliga lastbilar",
+      "myBookings": "Mina bokningar",
+      "recentActivity": "Senaste aktivitet"
+    },
+    "seller": {
+      "title": "Säljare instrumentpanel",
+      "myVehicles": "Mina fordon",
+      "bookings": "Bokningar",
+      "earnings": "Intäkter"
+    },
+    "admin": {
+      "title": "Admin instrumentpanel",
+      "pendingApprovals": "Väntande godkännanden",
+      "userManagement": "Användarhantering",
+      "systemStats": "Systemstatistik"
+    }
+  },
+  "navigation": {
+    "dashboard": "Instrumentpanel",
+    "vehicles": "Fordon",
+    "bookings": "Bokningar",
+    "earnings": "Intäkter",
+    "profile": "Profil",
+    "settings": "Inställningar",
+    "help": "Hjälp",
+    "admin": "Admin",
+    "users": "Användare",
+    "approvals": "Godkännanden",
+    "reports": "Rapporter"
+  },
+  "vehicles": {
+    "title": "Fordon",
+    "addVehicle": "Lägg till fordon",
+    "editVehicle": "Redigera fordon",
+    "deleteVehicle": "Ta bort fordon",
+    "vehicleDetails": "Fordonsdetaljer",
+    "noVehicles": "Inga fordon än",
+    "noVehiclesDescription": "Börja med att lägga till ditt första fordon",
+    "make": "Märke",
+    "model": "Modell",
+    "year": "År",
+    "type": "Typ",
+    "fuelType": "Bränsletyp",
+    "pricePerDay": "Pris per dag",
+    "location": "Plats",
+    "odometer": "Mätarställning",
+    "description": "Beskrivning",
+    "features": "Funktioner",
+    "specifications": "Specifikationer",
+    "dimensions": "Mått & Vikt",
+    "condition": "Skick",
+    "basicInfo": "Grundläggande information",
+    "registration": "Registrering & Status",
+    "environmental": "Miljöpåverkan",
+    "carbonFootprint": "Koldioxidavtryck",
+    "forRent": "Till uthyrning",
+    "forSale": "Till försäljning",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "confirmDelete": "Är du säker på att du vill ta bort detta fordon?",
+    "vehicleNotFound": "Fordon hittades inte",
+    "loadingVehicle": "Laddar fordon...",
+    "savingVehicle": "Sparar fordon...",
+    "vehicleSaved": "Fordon sparat framgångsrikt",
+    "vehicleDeleted": "Fordon borttaget framgångsrikt"
+  },
+  "countries": {
+    "SE": "Sverige",
+    "NO": "Norge",
+    "DK": "Danmark",
+    "FI": "Finland",
+    "DE": "Tyskland",
+    "US": "USA",
+    "GB": "Storbritannien"
+  },
+  "roles": {
+    "BUYER": "Lastbilshyresgäst",
+    "SELLER": "Lastbilsägare",
+    "ADMIN": "Administratör"
+  },
+  "userTypes": {
+    "INDIVIDUAL": "Individuellt konto",
+    "FLEET": "Flotthanteringskonto"
+  }
+}

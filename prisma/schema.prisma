@@ -1,0 +1,305 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Platform specific fields
+  role          String?
+  userType      String?
+  companyName   String?
+  phoneNumber   String?
+  address       String?
+  city          String?
+  country       String?
+  postalCode    String?
+  
+  // Admin fields
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+
+  // Relations
+  vehicles      Vehicle[]
+  bookings      Booking[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model VehicleMake {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+  models    VehicleModel[]
+
+  @@map("vehicle_makes")
+}
+
+model VehicleModel {
+  id        Int       @id @default(autoincrement())
+  name      String
+  makeId    Int
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  make      VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  vehicles  Vehicle[]
+
+  @@unique([name, makeId])
+  @@map("vehicle_models")
+}
+
+model VehicleType {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  vehicles    Vehicle[]
+
+  @@map("vehicle_types")
+}
+
+model FuelType {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+
+  @@map("fuel_types")
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sellerId    String
+  makeId      Int?
+  modelId     Int?
+  typeId      Int?
+  fuelTypeId  Int?
+  
+  // Basic Vehicle Info
+  modelName   String?
+  year        Int?
+  vinNumber   String?
+  pricePerDay Decimal  @db.Decimal(10, 2)
+  description String?
+  isActive    Boolean  @default(true)
+  
+  // Registration & Status
+  isRegistered      Boolean   @default(false)
+  odometer          Int?      // km
+  enginePower       String?   // e.g., "375 kW / 509 hp"
+  emissionClass     String?   // e.g., "6"
+  transmission      String?   // e.g., "Automat"
+  towbarType        String?   // e.g., "Bygel"
+  numberOfSeats     Int?
+  numberOfKeys      Int?
+  vehicleStatus     String?   // e.g., "Avställd"
+  isImported        Boolean   @default(false)
+  firstRegistration DateTime?
+  trafficDate       DateTime?
+  lastInspection    DateTime?
+  inspectionValidTo DateTime?
+  annualTax         Decimal?  @db.Decimal(10, 2)
+  annualTaxPaidTo   DateTime?
+  annualRoadFee     Decimal?  @db.Decimal(10, 2)
+  category          String?   // e.g., "N3"
+  
+  // Dimensions & Weights (in kg and mm)
+  kerbWeight            Int?
+  grossVehicleWeight    Int?
+  maxLoadWeight         Int?
+  allowedLoadWeight     Int?
+  maxTrailerWeight      Int?
+  maxCombinedWeight     Int?
+  length                Int?
+  width                 Int?
+  height                Int?
+  cargoCompartmentLength Int?
+  axleDistance          String? // e.g., "4900 / 1370 / 0"
+  
+  // Features & Equipment
+  hasAC                Boolean @default(false)
+  hasACC               Boolean @default(false)
+  hasCentralLock       Boolean @default(false)
+  hasElectricWindows   Boolean @default(false)
+  hasABS               Boolean @default(false)
+  hasDigitalTachograph Boolean @default(false)
+  hasTailLift          Boolean @default(false)
+  hasDieselHeater      Boolean @default(false)
+  hasSunroof           Boolean @default(false)
+  hasRefrigerator      Boolean @default(false)
+  hasCoffeeMachine     Boolean @default(false)
+  hasExtraLights       Boolean @default(false)
+  hasTruxWildbar       Boolean @default(false)
+  hasCompartmentHeater Boolean @default(false)
+  
+  // Condition & Location
+  usageInfo            String?
+  knownRemarks         String?
+  serviceHistory       String?
+  startDriveStatus     String?
+  city                 String?
+  region               String?
+  
+  // Environmental
+  carbonFootprint      Decimal? @db.Decimal(10, 2) // kg CO₂e
+  
+  // Media
+  images               String[] // Array of image URLs
+  videoTourUrl         String?
+  
+  // Other
+  auctionId            String?
+  reservationPrice     Decimal? @db.Decimal(10, 2)
+  vatStatus            String?
+  
+  // Listing Type
+  listingType          ListingType @default(RENT)
+  
+  // Relations
+  seller      User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  make        VehicleMake? @relation(fields: [makeId], references: [id])
+  model       VehicleModel? @relation(fields: [modelId], references: [id])
+  type        VehicleType? @relation(fields: [typeId], references: [id])
+  fuelType    FuelType?    @relation(fields: [fuelTypeId], references: [id])
+  bookings    Booking[]
+
+  @@map("vehicles")
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  vehicleId   String
+  buyerId     String
+  startDate   DateTime
+  endDate     DateTime
+  totalPrice  Decimal  @db.Decimal(10, 2)
+  isPaid      Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  status      BookingStatus @default(PENDING)
+  
+  // Relations
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  buyer       User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  payments    Payment[]
+
+  @@map("bookings")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  bookingId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentStatus PaymentStatus @default(PENDING)
+  isActive      Boolean       @default(true)
+  stripePaymentIntentId String?
+  
+  // Relations
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+enum ListingType {
+  RENT
+  SELL
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([userId, providerId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
