@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { PrismaClient } from "@/prisma/generated/prisma";
+import { type Prisma, PrismaClient } from "@/prisma/generated/prisma";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 		const limit = parseInt(searchParams.get("limit") || "10", 10);
 		const skip = (page - 1) * limit;
 
-		const where: any = { isActive: true };
+		const where: Prisma.VehicleWhereInput = { isActive: true };
 
 		// If sellerId is provided, filter by seller
 		if (sellerId) {

@@ -66,7 +66,7 @@ export function VehicleTypesTable() {
 
 	useEffect(() => {
 		fetchVehicleTypes();
-	}, []);
+	}, [fetchVehicleTypes]);
 
 	const handleSearch = (value: string) => {
 		setSearch(value);

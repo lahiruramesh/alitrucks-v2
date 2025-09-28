@@ -63,7 +63,7 @@ export function FuelTypesTable() {
 
 	useEffect(() => {
 		fetchFuelTypes();
-	}, []);
+	}, [fetchFuelTypes]);
 
 	const handleSearch = (value: string) => {
 		setSearch(value);

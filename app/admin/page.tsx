@@ -3,7 +3,7 @@
 import { Calendar, CheckCircle, Clock, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function AdminPage() {
 	const [stats, setStats] = useState<AdminStats | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	const fetchStats = async () => {
+	const fetchStats = useCallback(async () => {
 		try {
 			const response = await fetch("/api/admin/stats");
 			if (response.ok) {
@@ -54,11 +54,11 @@ export default function AdminPage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		fetchStats();
-	}, []);
+	}, [fetchStats]);
 
 	if (isLoading) {
 		return (

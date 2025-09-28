@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Calendar, Phone, Save, User } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,7 @@ export default function UserProfilePage() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [formData, setFormData] = useState<Partial<UserProfile>>({});
 
-	const fetchUser = async () => {
+	const fetchUser = useCallback(async () => {
 		try {
 			const response = await fetch(`/api/users/${params.id}`);
 			if (response.ok) {
@@ -55,13 +55,13 @@ export default function UserProfilePage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [params.id]);
 
 	useEffect(() => {
 		if (params.id) {
 			fetchUser();
 		}
-	}, [params.id]);
+	}, [params.id, fetchUser]);
 
 	const handleSave = async () => {
 		setIsSaving(true);
@@ -84,7 +84,7 @@ export default function UserProfilePage() {
 		}
 	};
 
-	const handleInputChange = (field: keyof UserProfile, value: any) => {
+	const handleInputChange = (field: keyof UserProfile, value: unknown) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 

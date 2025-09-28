@@ -62,7 +62,7 @@ export default function ProfilePage() {
 		if (user?.id) {
 			fetchProfile();
 		}
-	}, [user?.id]);
+	}, [user?.id, fetchProfile]);
 
 	const validateForm = () => {
 		const newErrors: Record<string, string> = {};

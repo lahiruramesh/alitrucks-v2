@@ -1,11 +1,10 @@
 "use client";
 
 import { Filter, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
-import { authClient } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,14 +64,15 @@ export default function AdminUsersPage() {
 		userType: "all",
 	});
 
-	const fetchUsers = async () => {
+	const fetchUsers = useCallback(async () => {
 		setIsLoading(true);
 		try {
 			const params = new URLSearchParams({
 				page: pagination.page.toString(),
 				limit: pagination.limit.toString(),
 				...(filters.role && filters.role !== "all" && { role: filters.role }),
-				...(filters.userType && filters.userType !== "all" && { userType: filters.userType }),
+				...(filters.userType &&
+					filters.userType !== "all" && { userType: filters.userType }),
 			});
 
 			const response = await fetch(`/api/users?${params}`);
@@ -85,11 +85,17 @@ export default function AdminUsersPage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [
+		filters.role,
+		filters.userType,
+		pagination.limit,
+		pagination.page,
+		pagination,
+	]);
 
 	useEffect(() => {
 		fetchUsers();
-	}, []);
+	}, [fetchUsers]);
 
 	const handlePageChange = (page: number) => {
 		setPagination((prev) => ({ ...prev, page }));
@@ -106,7 +112,7 @@ export default function AdminUsersPage() {
 				},
 				body: JSON.stringify({
 					banned: true,
-					banReason: "Disabled by administrator"
+					banReason: "Disabled by administrator",
 				}),
 			});
 
@@ -132,7 +138,7 @@ export default function AdminUsersPage() {
 				},
 				body: JSON.stringify({
 					banned: false,
-					banReason: null
+					banReason: null,
 				}),
 			});
 

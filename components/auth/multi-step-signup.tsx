@@ -92,10 +92,11 @@ export function MultiStepSignup() {
 	const handleSubmit = async () => {
 		setIsLoading(true);
 		try {
-		// Create the user account with Better-auth including additional fields
-		const { data, error } = await authClient.signUp.email({
-			...formData, // Spread all form data as type `any`
-		} as any);			if (error) {
+			// Create the user account with Better-auth including additional fields
+			const { data, error } = await authClient.signUp.email({
+				...formData, // Spread all form data as type `any`
+			} as any);
+			if (error) {
 				console.error("Signup error:", error);
 				// Handle error (show toast, etc.)
 				return;

@@ -50,7 +50,7 @@ export default function VehicleDetailPage() {
 		if (params.id) {
 			fetchVehicle();
 		}
-	}, [params.id]);
+	}, [params.id, fetchVehicle]);
 
 	const deleteVehicle = async () => {
 		if (!confirm("Are you sure you want to delete this vehicle?")) return;

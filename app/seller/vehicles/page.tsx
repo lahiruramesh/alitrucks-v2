@@ -3,7 +3,7 @@
 import { Plus, Truck } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ export default function SellerVehiclesPage() {
 		pages: 0,
 	});
 
-	const fetchVehicles = async () => {
+	const fetchVehicles = useCallback(async () => {
 		if (!user?.id) return;
 
 		setIsLoading(true);
@@ -46,13 +46,13 @@ export default function SellerVehiclesPage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [user?.id, pagination.page, pagination.limit, pagination]);
 
 	useEffect(() => {
 		if (user?.id) {
 			fetchVehicles();
 		}
-	}, [user?.id]);
+	}, [user?.id, fetchVehicles]);
 
 	const deleteVehicle = async (id: string) => {
 		if (!confirm("Are you sure you want to delete this vehicle?")) return;

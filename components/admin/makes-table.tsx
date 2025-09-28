@@ -64,7 +64,7 @@ export function MakesTable() {
 
 	useEffect(() => {
 		fetchMakes();
-	}, []);
+	}, [fetchMakes]);
 
 	const handleSearch = (value: string) => {
 		setSearch(value);

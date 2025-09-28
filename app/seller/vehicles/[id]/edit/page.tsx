@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
 import { VehicleForm } from "@/components/vehicles/vehicle-form";
@@ -12,7 +12,7 @@ export default function EditVehiclePage() {
 	const [vehicle, setVehicle] = useState<Vehicle | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	const fetchVehicle = async () => {
+	const fetchVehicle = useCallback(async () => {
 		try {
 			const response = await fetch(`/api/vehicles/${params.id}`);
 			if (response.ok) {
@@ -24,13 +24,13 @@ export default function EditVehiclePage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [params.id]);
 
 	useEffect(() => {
 		if (params.id) {
 			fetchVehicle();
 		}
-	}, [params.id]);
+	}, [params.id, fetchVehicle]);
 
 	if (isLoading) {
 		return (

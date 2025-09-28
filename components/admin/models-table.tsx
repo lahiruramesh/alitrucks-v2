@@ -99,7 +99,7 @@ export function ModelsTable() {
 	useEffect(() => {
 		fetchMakes();
 		fetchModels();
-	}, []);
+	}, [fetchMakes, fetchModels]);
 
 	const handleSearch = (value: string) => {
 		setSearch(value);
@@ -149,7 +149,11 @@ export function ModelsTable() {
 			toast.success("Model updated successfully");
 			setEditingModel(null);
 			setFormData({ name: "", makeId: "" });
-			fetchModels(pagination.page, search, selectedMake === "all" ? "" : selectedMake);
+			fetchModels(
+				pagination.page,
+				search,
+				selectedMake === "all" ? "" : selectedMake,
+			);
 		} catch (_error) {
 			toast.error("Failed to update model");
 		}
@@ -169,7 +173,11 @@ export function ModelsTable() {
 			}
 
 			toast.success("Model deleted successfully");
-			fetchModels(pagination.page, search, selectedMake === "all" ? "" : selectedMake);
+			fetchModels(
+				pagination.page,
+				search,
+				selectedMake === "all" ? "" : selectedMake,
+			);
 		} catch (error: any) {
 			toast.error(error.message || "Failed to delete model");
 		}
