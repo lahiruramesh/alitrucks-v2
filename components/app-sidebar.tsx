@@ -8,6 +8,7 @@ import {
 	HelpCircle,
 	LayoutDashboard,
 	LogOut,
+	MessageCircle,
 	Server,
 	Settings,
 	Truck,
@@ -100,6 +101,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						icon: Calendar,
 					},
 					{
+						title: "Chat",
+						url: "/seller/chat",
+						icon: MessageCircle,
+					},
+					{
 						title: "Earnings",
 						url: "/seller/earnings",
 						icon: DollarSign,
@@ -143,6 +149,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						title: "Users",
 						url: "/admin/users",
 						icon: Users,
+					},
+					{
+						title: "Chat",
+						url: "/admin/chat",
+						icon: MessageCircle,
 					},
 					{
 						title: "Reports",

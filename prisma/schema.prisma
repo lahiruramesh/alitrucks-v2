@@ -50,6 +50,9 @@ model User {
   bookings      Booking[]
   stripeAccount StripeAccount?
   vehicleApprovals VehicleApproval[]
+  initiatedChats Chat[]     @relation("ChatInitiator")
+  participantInChats ChatParticipant[]
+  sentMessages   ChatMessage[]
 
   @@unique([email])
   @@map("user")
@@ -453,4 +456,64 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model Chat {
+  id          String   @id @default(cuid())
+  subject     String?  // Optional subject for the chat
+  status      ChatStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  initiatorId String
+  initiator   User     @relation("ChatInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  participants ChatParticipant[]
+  messages    ChatMessage[]
+
+  @@map("chat")
+}
+
+model ChatParticipant {
+  id          String   @id @default(cuid())
+  chatId      String
+  userId      String
+  joinedAt    DateTime @default(now())
+  lastSeenAt  DateTime?
+  
+  // Relations
+  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@map("chat_participant")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  chatId      String
+  senderId    String
+  content     String
+  messageType MessageType @default(TEXT)
+  readBy      String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender      User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("chat_message")
+}
+
+enum ChatStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
 }
