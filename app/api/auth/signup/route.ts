@@ -1,5 +1,5 @@
-import bcrypt from "bcryptjs";
 import { type NextRequest, NextResponse } from "next/server";
+import { authClient } from "@/lib/auth-client";
 import { PrismaClient } from "@/prisma/generated/prisma";
 
 const prisma = new PrismaClient();
@@ -32,17 +32,23 @@ export async function POST(request: NextRequest) {
 				{ status: 400 },
 			);
 		}
+		const { data, error } = await authClient.signUp.email({
+			name,
+			email,
+			password,
+		});
+		if (error || !data?.user) {
+			console.error("Error during signup:", error);
+			return NextResponse.json(
+				{ error: "Failed to create account" },
+				{ status: 500 },
+			);
+		}
+		const user = data.user;
 
-		// Hash password
-		const hashedPassword = await bcrypt.hash(password, 12);
-
-		// Create user with all fields
-		const user = await prisma.user.create({
+		await prisma.user.update({
+			where: { id: user.id },
 			data: {
-				id: `user_${Date.now()}_${Math.random().toString(36).substring(2)}`,
-				name,
-				email,
-				emailVerified: false,
 				role: role || "BUYER",
 				userType: userType || "INDIVIDUAL",
 				companyName,
@@ -54,25 +60,10 @@ export async function POST(request: NextRequest) {
 			},
 		});
 
-		// Create account with password
-		await prisma.account.create({
-			data: {
-				id: `account_${Date.now()}_${Math.random().toString(36).substring(2)}`,
-				accountId: user.id,
-				providerId: "credential",
-				userId: user.id,
-				password: hashedPassword,
-			},
-		});
-
 		return NextResponse.json({
 			success: true,
 			user: {
 				id: user.id,
-				name: user.name,
-				email: user.email,
-				role: user.role,
-				userType: user.userType,
 			},
 		});
 	} catch (error) {

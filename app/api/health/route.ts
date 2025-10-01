@@ -13,6 +13,7 @@ export async function GET() {
 			{ status: 200 },
 		);
 	} catch (error) {
+		console.error("Health check error:", error);
 		return NextResponse.json(
 			{
 				status: "unhealthy",
