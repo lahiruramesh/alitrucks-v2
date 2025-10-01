@@ -40,6 +40,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client and verify generation
+RUN pnpm dlx prisma migrate deploy
 RUN pnpm dlx prisma generate
 RUN ls -la /app/prisma/generated/ || echo "Prisma generation location check"
 RUN ls -la /app/node_modules/.prisma/ || echo "Standard Prisma location check"
