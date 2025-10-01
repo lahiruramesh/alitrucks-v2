@@ -147,7 +147,7 @@ export function ChatList({
 							key={chat.id}
 							className={cn(
 								"cursor-pointer transition-all hover:shadow-md",
-								isSelected && "ring-2 ring-blue-500 border-blue-300",
+								isSelected && "ring-1 ring-green-500 border-green-300",
 							)}
 							onClick={() => onChatSelect(chat.id)}
 						>
