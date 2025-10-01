@@ -1,10 +1,10 @@
 "use client";
 
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	type ResponsiveAction,
+	type ResponsiveColumn,
+	ResponsiveDataTable,
+} from "@/components/ui/responsive-data-table";
 
 interface Make {
 	id: string;
@@ -25,6 +30,9 @@ interface Make {
 }
 
 export function MakesTable() {
+	const t = useTranslations("admin.vehicleManagement.makes");
+	const tCommon = useTranslations("common");
+
 	const [makes, setMakes] = useState<Make[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [pagination, setPagination] = useState({
@@ -40,27 +48,30 @@ export function MakesTable() {
 		name: "",
 	});
 
-	const fetchMakes = async (page = 1, searchTerm = "") => {
-		try {
-			setLoading(true);
-			const params = new URLSearchParams({
-				page: page.toString(),
-				limit: pagination.limit.toString(),
-				search: searchTerm,
-			});
+	const fetchMakes = useCallback(
+		async (page = 1, searchTerm = "") => {
+			try {
+				setLoading(true);
+				const params = new URLSearchParams({
+					page: page.toString(),
+					limit: pagination.limit.toString(),
+					search: searchTerm,
+				});
 
-			const response = await fetch(`/api/admin/makes?${params}`);
-			if (!response.ok) throw new Error("Failed to fetch makes");
+				const response = await fetch(`/api/admin/makes?${params}`);
+				if (!response.ok) throw new Error("Failed to fetch makes");
 
-			const data = await response.json();
-			setMakes(data.makes);
-			setPagination(data.pagination);
-		} catch (_error) {
-			toast.error("Failed to fetch makes");
-		} finally {
-			setLoading(false);
-		}
-	};
+				const data = await response.json();
+				setMakes(data.makes);
+				setPagination(data.pagination);
+			} catch (_error) {
+				toast.error("Failed to fetch makes");
+			} finally {
+				setLoading(false);
+			}
+		},
+		[pagination.limit],
+	);
 
 	useEffect(() => {
 		fetchMakes();
@@ -85,7 +96,7 @@ export function MakesTable() {
 
 			if (!response.ok) throw new Error("Failed to create make");
 
-			toast.success("Make created successfully");
+			toast.success(t("created", { name: formData.name }));
 			setIsCreateOpen(false);
 			setFormData({ name: "" });
 			fetchMakes(pagination.page, search);
@@ -106,7 +117,7 @@ export function MakesTable() {
 
 			if (!response.ok) throw new Error("Failed to update make");
 
-			toast.success("Make updated successfully");
+			toast.success(t("updated", { name: formData.name }));
 			setEditingMake(null);
 			setFormData({ name: "" });
 			fetchMakes(pagination.page, search);
@@ -116,7 +127,7 @@ export function MakesTable() {
 	};
 
 	const handleDelete = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this make?")) return;
+		if (!confirm(t("confirmDelete"))) return;
 
 		try {
 			const response = await fetch(`/api/admin/makes/${id}`, {
@@ -128,58 +139,64 @@ export function MakesTable() {
 				throw new Error(error.error || "Failed to delete make");
 			}
 
-			toast.success("Make deleted successfully");
+			toast.success(t("deleted"));
 			fetchMakes(pagination.page, search);
 		} catch (error: any) {
 			toast.error(error.message || "Failed to delete make");
 		}
 	};
 
-	const columns = [
+	const columns: ResponsiveColumn<Make>[] = [
 		{
-			key: "name" as keyof Make,
-			header: "Name",
+			key: "name",
+			header: t("name"),
+			mobileLabel: t("name"),
+			priority: "high",
+			sortable: true,
+			searchable: true,
 			render: (value: any) => <span className="font-medium">{value}</span>,
 		},
 		{
-			key: "_count" as keyof Make,
-			header: "Models",
+			key: "_count",
+			header: t("models"),
+			mobileLabel: t("models"),
+			priority: "medium",
+			sortable: true,
 			render: (value: any) => (
-				<span className="text-sm">{value.models} models</span>
+				<span className="text-sm">
+					{value.models} {t("models").toLowerCase()}
+				</span>
 			),
 		},
 		{
-			key: "_count" as keyof Make,
-			header: "Vehicles",
+			key: "_count",
+			header: t("vehicles"),
+			mobileLabel: t("vehicles"),
+			priority: "medium",
+			sortable: true,
 			render: (value: any) => (
-				<span className="text-sm">{value.vehicles} vehicles</span>
+				<span className="text-sm">
+					{value.vehicles} {t("vehicles").toLowerCase()}
+				</span>
 			),
 		},
+	];
+
+	const _actions: ResponsiveAction<Make>[] = [
 		{
-			key: "actions" as keyof Make,
-			header: "Actions",
-			render: (_: any, item: Make) => (
-				<div className="flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => {
-							setEditingMake(item);
-							setFormData({ name: item.name });
-						}}
-					>
-						<Edit className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => handleDelete(item.id)}
-						disabled={item._count.vehicles > 0}
-					>
-						<Trash2 className="h-4 w-4" />
-					</Button>
-				</div>
-			),
+			label: tCommon("edit"),
+			icon: <Edit className="h-4 w-4" />,
+			onClick: (item: Make) => {
+				setEditingMake(item);
+				setFormData({ name: item.name });
+			},
+		},
+		{
+			label: tCommon("delete"),
+			icon: <Trash2 className="h-4 w-4" />,
+			variant: "destructive",
+			onClick: (item: Make) => handleDelete(item.id),
+			show: (item: Make) => item._count.vehicles === 0,
 		},
 	];
 
@@ -188,7 +205,7 @@ export function MakesTable() {
 			<div className="flex justify-between items-center">
 				<div className="flex-1 max-w-sm">
 					<Input
-						placeholder="Search makes..."
+						placeholder={t("searchPlaceholder")}
 						value={search}
 						onChange={(e) => handleSearch(e.target.value)}
 					/>
@@ -197,16 +214,16 @@ export function MakesTable() {
 					<DialogTrigger asChild>
 						<Button>
 							<Plus className="h-4 w-4 mr-2" />
-							Add Make
+							{t("add")}
 						</Button>
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>
-							<DialogTitle>Create Make</DialogTitle>
+							<DialogTitle>{t("create")}</DialogTitle>
 						</DialogHeader>
 						<div className="space-y-4">
 							<div>
-								<Label htmlFor="name">Name</Label>
+								<Label htmlFor="name">{t("name")}</Label>
 								<Input
 									id="name"
 									value={formData.name}
@@ -216,14 +233,14 @@ export function MakesTable() {
 								/>
 							</div>
 							<Button onClick={handleCreate} className="w-full">
-								Create Make
+								{t("create")}
 							</Button>
 						</div>
 					</DialogContent>
 				</Dialog>
 			</div>
 
-			<DataTable
+			<ResponsiveDataTable
 				data={makes}
 				columns={columns}
 				isLoading={loading}
@@ -232,7 +249,7 @@ export function MakesTable() {
 					onPageChange: handlePageChange,
 				}}
 				disableSearch={true}
-				emptyMessage="No makes found"
+				emptyMessage={t("noMakesFound")}
 			/>
 
 			<Dialog
@@ -244,11 +261,11 @@ export function MakesTable() {
 			>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Edit Make</DialogTitle>
+						<DialogTitle>{t("edit")}</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4">
 						<div>
-							<Label htmlFor="edit-name">Name</Label>
+							<Label htmlFor="edit-name">{t("name")}</Label>
 							<Input
 								id="edit-name"
 								value={formData.name}
@@ -258,7 +275,7 @@ export function MakesTable() {
 							/>
 						</div>
 						<Button onClick={handleEdit} className="w-full">
-							Update Make
+							{t("update")}
 						</Button>
 					</div>
 				</DialogContent>

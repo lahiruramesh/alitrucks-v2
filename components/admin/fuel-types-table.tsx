@@ -1,10 +1,9 @@
 "use client";
 
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DataTable } from "../ui/data-table";
 
 interface FuelType {
 	id: string;
@@ -39,27 +39,30 @@ export function FuelTypesTable() {
 		name: "",
 	});
 
-	const fetchFuelTypes = async (page = 1, searchTerm = "") => {
-		try {
-			setLoading(true);
-			const params = new URLSearchParams({
-				page: page.toString(),
-				limit: pagination.limit.toString(),
-				search: searchTerm,
-			});
+	const fetchFuelTypes = useCallback(
+		async (page = 1, searchTerm = "") => {
+			try {
+				setLoading(true);
+				const params = new URLSearchParams({
+					page: page.toString(),
+					limit: pagination.limit.toString(),
+					search: searchTerm,
+				});
 
-			const response = await fetch(`/api/admin/fuel-types?${params}`);
-			if (!response.ok) throw new Error("Failed to fetch fuel types");
+				const response = await fetch(`/api/admin/fuel-types?${params}`);
+				if (!response.ok) throw new Error("Failed to fetch fuel types");
 
-			const data = await response.json();
-			setFuelTypes(data.fuelTypes);
-			setPagination(data.pagination);
-		} catch (_error) {
-			toast.error("Failed to fetch fuel types");
-		} finally {
-			setLoading(false);
-		}
-	};
+				const data = await response.json();
+				setFuelTypes(data.fuelTypes);
+				setPagination(data.pagination);
+			} catch (_error) {
+				toast.error("Failed to fetch fuel types");
+			} finally {
+				setLoading(false);
+			}
+		},
+		[pagination.limit],
+	);
 
 	useEffect(() => {
 		fetchFuelTypes();

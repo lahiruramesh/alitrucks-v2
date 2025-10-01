@@ -33,6 +33,13 @@ export async function GET(request: NextRequest) {
 							email: true,
 						},
 					},
+					// Include current approval status for seller vehicles
+					...(sellerId && {
+						approvals: {
+							orderBy: { createdAt: "desc" },
+							take: 1,
+						},
+					}),
 				},
 				orderBy: { createdAt: "desc" },
 				skip,
@@ -41,8 +48,17 @@ export async function GET(request: NextRequest) {
 			prisma.vehicle.count({ where }),
 		]);
 
+		// Transform data to include currentApproval for seller vehicles
+		const transformedVehicles = vehicles.map((vehicle) => {
+			const { approvals, ...vehicleData } = vehicle;
+			return {
+				...vehicleData,
+				currentApproval: approvals?.[0] || null,
+			};
+		});
+
 		return NextResponse.json({
-			vehicles,
+			vehicles: transformedVehicles,
 			pagination: {
 				page,
 				limit,

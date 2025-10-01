@@ -40,12 +40,95 @@ model User {
   banReason     String?
   banExpires    DateTime?
 
+  // Stripe Connect fields
+  stripeAccountId       String?   @unique
+  stripeAccountVerified Boolean   @default(false)
+  stripeOnboardingUrl   String?
+  
   // Relations
   vehicles      Vehicle[]
   bookings      Booking[]
+  stripeAccount StripeAccount?
+  vehicleApprovals VehicleApproval[]
 
   @@unique([email])
   @@map("user")
+}
+
+model StripeAccount {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  stripeAccountId       String    @unique
+  accountType           StripeAccountType @default(EXPRESS)
+  country               String    @default("SE") // Default to Sweden
+  email                 String?
+  
+  // Account status
+  chargesEnabled        Boolean   @default(false)
+  payoutsEnabled        Boolean   @default(false)
+  detailsSubmitted      Boolean   @default(false)
+  
+  // Requirements
+  currentlyDue          String[]  @default([])
+  eventuallyDue         String[]  @default([])
+  pastDue               String[]  @default([])
+  pendingVerification   String[]  @default([])
+  
+  // Account links
+  onboardingUrl         String?
+  dashboardUrl          String?
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  // Relations
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payouts               Payout[]
+
+  @@map("stripe_accounts")
+}
+
+model Payout {
+  id                String        @id @default(cuid())
+  stripePayoutId    String        @unique
+  stripeAccountId   String
+  amount            Int           // Amount in smallest currency unit (e.g., cents)
+  currency          String        @default("SEK")
+  status            PayoutStatus  @default(PENDING)
+  description       String?
+  
+  // Arrival details
+  arrivalDate       DateTime?
+  method            String?       // instant, standard
+  type              String?       // bank_account, card
+  
+  // Failure details  
+  failureCode       String?
+  failureMessage    String?
+  
+  // Metadata
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  stripeAccount     StripeAccount @relation(fields: [stripeAccountId], references: [stripeAccountId], onDelete: Cascade)
+
+  @@map("payouts")
+}
+
+enum StripeAccountType {
+  EXPRESS
+  STANDARD
+  CUSTOM
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELED
 }
 
 model VehicleMake {
@@ -114,6 +197,15 @@ model Vehicle {
   pricePerDay Decimal  @db.Decimal(10, 2)
   description String?
   isActive    Boolean  @default(true)
+  
+  // Approval Workflow
+  status              VehicleStatus     @default(DRAFT)
+  submittedAt         DateTime?
+  approvedAt          DateTime?
+  rejectedAt          DateTime?
+  publishedAt         DateTime?
+  isPublished         Boolean           @default(false)
+  currentApprovalId   String?           @unique
   
   // Registration & Status
   isRegistered      Boolean   @default(false)
@@ -194,8 +286,50 @@ model Vehicle {
   type        VehicleType? @relation(fields: [typeId], references: [id])
   fuelType    FuelType?    @relation(fields: [fuelTypeId], references: [id])
   bookings    Booking[]
+  approvals   VehicleApproval[]
+  currentApproval VehicleApproval? @relation("CurrentApproval", fields: [currentApprovalId], references: [id])
+  availabilities VehicleAvailability[]
 
   @@map("vehicles")
+}
+
+model VehicleApproval {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  reviewerId  String?
+  status      ApprovalStatus @default(PENDING)
+  comments    String?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  reviewer    User?    @relation(fields: [reviewerId], references: [id])
+  currentForVehicle Vehicle? @relation("CurrentApproval")
+
+  @@map("vehicle_approvals")
+}
+
+model VehicleAvailability {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  date        DateTime @db.Date
+  startTime   DateTime @db.Time
+  endTime     DateTime @db.Time
+  isAvailable Boolean  @default(true)
+  isBooked    Boolean  @default(false)
+  bookingId   String?
+  price       Decimal? @db.Decimal(10, 2) // Optional custom pricing for specific slots
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  booking     Booking? @relation(fields: [bookingId], references: [id])
+
+  @@unique([vehicleId, date, startTime])
+  @@map("vehicle_availability")
 }
 
 model Booking {
@@ -215,6 +349,7 @@ model Booking {
   vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   buyer       User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   payments    Payment[]
+  availabilitySlots VehicleAvailability[]
 
   @@map("bookings")
 }
@@ -238,6 +373,22 @@ model Payment {
 enum ListingType {
   RENT
   SELL
+}
+
+enum VehicleStatus {
+  DRAFT         // Initial state, can edit everything
+  PENDING       // Submitted for approval
+  APPROVED      // Approved by admin, restricted editing
+  REJECTED      // Rejected by admin, can edit and resubmit
+  PUBLISHED     // Live and available for booking
+  SUSPENDED     // Temporarily unavailable
+  ARCHIVED      // No longer available
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum BookingStatus {

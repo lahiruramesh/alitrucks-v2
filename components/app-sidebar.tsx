@@ -4,11 +4,11 @@ import {
 	BarChart3,
 	Building2,
 	Calendar,
-	CheckSquare,
 	DollarSign,
 	HelpCircle,
 	LayoutDashboard,
 	LogOut,
+	Server,
 	Settings,
 	Truck,
 	User,
@@ -130,19 +130,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				title: "Admin",
 				items: [
 					{
+						title: "Vehicles",
+						url: "/admin/vehicles",
+						icon: Truck,
+					},
+					{
 						title: "Vehicle Management",
 						url: "/admin/vehicle-management",
-						icon: Truck,
+						icon: Server,
 					},
 					{
 						title: "Users",
 						url: "/admin/users",
 						icon: Users,
-					},
-					{
-						title: "Approvals",
-						url: "/admin/approvals",
-						icon: CheckSquare,
 					},
 					{
 						title: "Reports",

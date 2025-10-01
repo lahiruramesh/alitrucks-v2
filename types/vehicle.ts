@@ -23,6 +23,8 @@ export interface FuelType {
 }
 
 export type ListingType = 'RENT' | 'SELL';
+export type VehicleStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PUBLISHED' | 'SUSPENDED' | 'ARCHIVED';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type BookingStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 
@@ -36,12 +38,21 @@ export interface Vehicle {
   fuelTypeId?: number;
   
   // Basic Vehicle Info
-  model?: string;
+  modelName?: string;
   year?: number;
   vinNumber?: string;
   pricePerDay: number;
   description?: string;
   isActive: boolean;
+  
+  // Approval Workflow
+  status: VehicleStatus;
+  submittedAt?: Date;
+  approvedAt?: Date;
+  rejectedAt?: Date;
+  publishedAt?: Date;
+  isPublished: boolean;
+  currentApprovalId?: string;
   
   // Registration & Status
   isRegistered: boolean;
@@ -117,6 +128,46 @@ export interface Vehicle {
   make?: VehicleMake;
   type?: VehicleType;
   fuelType?: FuelType;
+  currentApproval?: VehicleApproval;
+  approvals?: VehicleApproval[];
+  availabilities?: VehicleAvailability[];
+}
+
+export interface VehicleApproval {
+  id: string;
+  vehicleId: string;
+  reviewerId?: string;
+  status: ApprovalStatus;
+  comments?: string;
+  reviewedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Relations
+  vehicle?: Vehicle;
+  reviewer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface VehicleAvailability {
+  id: string;
+  vehicleId: string;
+  date: Date;
+  startTime: Date;
+  endTime: Date;
+  isAvailable: boolean;
+  isBooked: boolean;
+  bookingId?: string;
+  price?: number;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Relations
+  vehicle?: Vehicle;
+  booking?: Booking;
 }
 
 export interface Booking {
@@ -170,7 +221,7 @@ export interface CreateVehicleData {
   makeId?: number;
   typeId?: number;
   fuelTypeId?: number;
-  model?: string;
+  modelName?: string;
   year?: number;
   vinNumber?: string;
   pricePerDay: number;
@@ -252,4 +303,55 @@ export interface CreateBookingData {
   startDate: Date;
   endDate: Date;
   totalPrice: number;
+}
+
+export interface ApprovalActionData {
+  status: ApprovalStatus;
+  comments?: string;
+}
+
+export interface SetAvailabilityData {
+  vehicleId: string;
+  date: Date;
+  timeSlots: {
+    startTime: Date;
+    endTime: Date;
+    isAvailable: boolean;
+    price?: number;
+  }[];
+}
+
+export interface SubmitForApprovalData {
+  vehicleId: string;
+}
+
+// Utility types for restricted editing
+export interface RestrictedVehicleFields {
+  // Fields that cannot be edited once approved
+  readonly makeId?: number;
+  readonly typeId?: number;
+  readonly fuelTypeId?: number;
+  readonly modelName?: string;
+  readonly year?: number;
+  readonly vinNumber?: string;
+  readonly images?: string[];
+  
+  // Fields that can always be edited
+  pricePerDay: number;
+  description?: string;
+  usageInfo?: string;
+  knownRemarks?: string;
+  serviceHistory?: string;
+  city?: string;
+  region?: string;
+}
+
+export interface VehicleStatusInfo {
+  status: VehicleStatus;
+  canEdit: boolean;
+  canSubmit: boolean;
+  canPublish: boolean;
+  canSetAvailability: boolean;
+  restrictedFields: string[];
+  statusMessage: string;
 }

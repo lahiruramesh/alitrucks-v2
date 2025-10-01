@@ -77,6 +77,20 @@
   --sidebar-accent-foreground: hsl(120 10% 25%);
   --sidebar-border: hsl(120 20% 88%);
   --sidebar-ring: hsl(142 76% 36%);
+
+  /* Standard responsive breakpoints */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  /* Table specific responsive utilities */
+  --table-mobile-padding: 0.75rem;
+  --table-desktop-padding: 1rem;
+  --table-mobile-font-size: 0.875rem;
+  --table-desktop-font-size: 1rem;
 }
 
 .dark {
@@ -116,9 +130,63 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: var(--ring);
+    outline-offset: 2px;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  
+  /* Mobile-first responsive table utilities */
+  .table-responsive {
+    @media (max-width: 768px) {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+  
+  .table-cell-responsive {
+    padding: var(--table-mobile-padding);
+    font-size: var(--table-mobile-font-size);
+    
+    @media (min-width: 768px) {
+      padding: var(--table-desktop-padding);
+      font-size: var(--table-desktop-font-size);
+    }
+  }
+  
+  .table-mobile-stack {
+    @media (max-width: 768px) {
+      display: block;
+      border: none;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: var(--card);
+      border-radius: calc(var(--radius) - 2px);
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    }
+  }
+  
+  /* Remove borders from mobile cards */
+  .mobile-card-borderless {
+    border: none !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  }
+  
+  .table-mobile-label {
+    @media (max-width: 768px) {
+      display: inline-block;
+      font-weight: 600;
+      min-width: 120px;
+      margin-right: 0.5rem;
+      color: var(--muted-foreground);
+    }
+    
+    @media (min-width: 769px) {
+      display: none;
+    }
   }
 }

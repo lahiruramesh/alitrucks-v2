@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
 	Card,
 	CardContent,
@@ -11,8 +12,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/auth-context";
-import { authClient } from "@/lib/auth-client";
 import type { SignupFormData } from "@/types/common";
 import { BasicInfoStep } from "./steps/basic-info-step";
 import { CompanyInfoStep } from "./steps/company-info-step";
@@ -22,12 +21,17 @@ import { RoleSelectionStep } from "./steps/role-selection-step";
 
 export function MultiStepSignup() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const t = useTranslations();
-	const { refreshUser } = useAuth();
 	const [currentStep, setCurrentStep] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
+
+	// Get query parameters
+	const returnUrl = searchParams.get("returnUrl");
+	const preferredRole = searchParams.get("role");
+
 	const [formData, setFormData] = useState<SignupFormData>({
-		role: "BUYER",
+		role: (preferredRole as "BUYER" | "SELLER") || "BUYER",
 		userType: "INDIVIDUAL",
 		name: "",
 		email: "",
@@ -40,6 +44,16 @@ export function MultiStepSignup() {
 		postalCode: "",
 		companyName: "",
 	});
+
+	// Skip role selection if role is already set from query params
+	useEffect(() => {
+		if (
+			preferredRole &&
+			(preferredRole === "BUYER" || preferredRole === "SELLER")
+		) {
+			setCurrentStep(2); // Skip to basic info step
+		}
+	}, [preferredRole]);
 
 	const getSteps = () => [
 		{
@@ -92,25 +106,34 @@ export function MultiStepSignup() {
 	const handleSubmit = async () => {
 		setIsLoading(true);
 		try {
-			// Create the user account with Better-auth including additional fields
-			const { data, error } = await authClient.signUp.email({
-				...formData, // Spread all form data as type `any`
-			} as any);
-			if (error) {
-				console.error("Signup error:", error);
-				// Handle error (show toast, etc.)
+			// Use our custom signup endpoint that properly handles role assignment
+			const response = await fetch("/api/auth/signup", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(formData),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				console.error("Signup error:", result.error);
+				toast.error(result.error || "Failed to create account");
 				return;
 			}
 
-			// Refresh user context
-			await refreshUser();
+			// Show success message
+			toast.success("Account created successfully! Please login to continue.");
 
-			// Redirect based on user role
-			const redirectPath =
-				formData.role === "SELLER" ? "/seller" : "/dashboard";
-			router.push(redirectPath);
+			// Redirect to login page with return URL parameter
+			const loginUrl = returnUrl
+				? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+				: "/login";
+			router.push(loginUrl);
 		} catch (error) {
 			console.error("Signup failed:", error);
+			toast.error("An unexpected error occurred. Please try again.");
 		} finally {
 			setIsLoading(false);
 		}

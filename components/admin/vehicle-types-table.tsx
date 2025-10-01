@@ -1,10 +1,10 @@
 "use client";
 
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	type ResponsiveAction,
+	type ResponsiveColumn,
+	ResponsiveDataTable,
+} from "@/components/ui/responsive-data-table";
 import { Textarea } from "@/components/ui/textarea";
 
 interface VehicleType {
@@ -26,6 +31,9 @@ interface VehicleType {
 }
 
 export function VehicleTypesTable() {
+	const t = useTranslations("admin.vehicleManagement.vehicleTypes");
+	const tCommon = useTranslations("common");
+
 	const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [pagination, setPagination] = useState({
@@ -42,27 +50,30 @@ export function VehicleTypesTable() {
 		description: "",
 	});
 
-	const fetchVehicleTypes = async (page = 1, searchTerm = "") => {
-		try {
-			setLoading(true);
-			const params = new URLSearchParams({
-				page: page.toString(),
-				limit: pagination.limit.toString(),
-				search: searchTerm,
-			});
+	const fetchVehicleTypes = useCallback(
+		async (page = 1, searchTerm = "") => {
+			try {
+				setLoading(true);
+				const params = new URLSearchParams({
+					page: page.toString(),
+					limit: pagination.limit.toString(),
+					search: searchTerm,
+				});
 
-			const response = await fetch(`/api/admin/vehicle-types?${params}`);
-			if (!response.ok) throw new Error("Failed to fetch vehicle types");
+				const response = await fetch(`/api/admin/vehicle-types?${params}`);
+				if (!response.ok) throw new Error("Failed to fetch vehicle types");
 
-			const data = await response.json();
-			setVehicleTypes(data.vehicleTypes);
-			setPagination(data.pagination);
-		} catch (_error) {
-			toast.error("Failed to fetch vehicle types");
-		} finally {
-			setLoading(false);
-		}
-	};
+				const data = await response.json();
+				setVehicleTypes(data.vehicleTypes);
+				setPagination(data.pagination);
+			} catch (_error) {
+				toast.error("Failed to fetch vehicle types");
+			} finally {
+				setLoading(false);
+			}
+		},
+		[pagination.limit],
+	);
 
 	useEffect(() => {
 		fetchVehicleTypes();
@@ -87,7 +98,7 @@ export function VehicleTypesTable() {
 
 			if (!response.ok) throw new Error("Failed to create vehicle type");
 
-			toast.success(`Vehicle type "${formData.name}" created successfully`);
+			toast.success(t("created", { name: formData.name }));
 			setIsCreateOpen(false);
 			setFormData({ name: "", description: "" });
 			fetchVehicleTypes(1, search); // Go to first page to see the new item
@@ -111,7 +122,7 @@ export function VehicleTypesTable() {
 
 			if (!response.ok) throw new Error("Failed to update vehicle type");
 
-			toast.success(`Vehicle type "${formData.name}" updated successfully`);
+			toast.success(t("updated", { name: formData.name }));
 			setEditingType(null);
 			setFormData({ name: "", description: "" });
 			fetchVehicleTypes(pagination.page, search);
@@ -121,7 +132,7 @@ export function VehicleTypesTable() {
 	};
 
 	const handleDelete = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this vehicle type?")) return;
+		if (!confirm(t("confirmDelete"))) return;
 
 		try {
 			const response = await fetch(`/api/admin/vehicle-types/${id}`, {
@@ -133,63 +144,67 @@ export function VehicleTypesTable() {
 				throw new Error(error.error || "Failed to delete vehicle type");
 			}
 
-			toast.success("Vehicle type deleted successfully");
+			toast.success(t("deleted"));
 			fetchVehicleTypes(pagination.page, search);
 		} catch (error: any) {
 			toast.error(error.message || "Failed to delete vehicle type");
 		}
 	};
 
-	const columns = [
+	const columns: ResponsiveColumn<VehicleType>[] = [
 		{
-			key: "name" as keyof VehicleType,
-			header: "Name",
+			key: "name",
+			header: t("name"),
+			mobileLabel: t("name"),
+			priority: "high",
+			sortable: true,
+			searchable: true,
 			render: (value: any) => <span className="font-medium">{value}</span>,
 		},
 		{
-			key: "description" as keyof VehicleType,
-			header: "Description",
+			key: "description",
+			header: t("description"),
+			mobileLabel: t("description"),
+			priority: "medium",
+			hideOnMobile: false,
 			render: (value: any) => (
 				<span className="text-muted-foreground">
-					{value || "No description"}
+					{value || t("noDescription")}
 				</span>
 			),
 		},
 		{
-			key: "_count" as keyof VehicleType,
-			header: "Vehicles",
+			key: "_count",
+			header: t("vehicles"),
+			mobileLabel: t("vehicles"),
+			priority: "medium",
+			sortable: true,
 			render: (value: any) => (
-				<span className="text-sm">{value.vehicles} vehicles</span>
+				<span className="text-sm">
+					{value.vehicles} {t("vehicles").toLowerCase()}
+				</span>
 			),
 		},
+	];
+
+	const actions: ResponsiveAction<VehicleType>[] = [
 		{
-			key: "actions" as keyof VehicleType,
-			header: "Actions",
-			render: (_: any, item: VehicleType) => (
-				<div className="flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => {
-							setEditingType(item);
-							setFormData({
-								name: item.name,
-								description: item.description || "",
-							});
-						}}
-					>
-						<Edit className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => handleDelete(item.id)}
-						disabled={item._count.vehicles > 0}
-					>
-						<Trash2 className="h-4 w-4" />
-					</Button>
-				</div>
-			),
+			label: tCommon("edit"),
+			icon: <Edit className="h-4 w-4" />,
+			onClick: (item: VehicleType) => {
+				setEditingType(item);
+				setFormData({
+					name: item.name,
+					description: item.description || "",
+				});
+			},
+		},
+		{
+			label: tCommon("delete"),
+			icon: <Trash2 className="h-4 w-4" />,
+			variant: "destructive",
+			onClick: (item: VehicleType) => handleDelete(item.id),
+			show: (item: VehicleType) => item._count.vehicles === 0,
 		},
 	];
 
@@ -198,7 +213,7 @@ export function VehicleTypesTable() {
 			<div className="flex justify-between items-center">
 				<div className="flex-1 max-w-sm">
 					<Input
-						placeholder="Search vehicle types..."
+						placeholder={t("searchPlaceholder")}
 						value={search}
 						onChange={(e) => handleSearch(e.target.value)}
 					/>
@@ -207,16 +222,16 @@ export function VehicleTypesTable() {
 					<DialogTrigger asChild>
 						<Button>
 							<Plus className="h-4 w-4 mr-2" />
-							Add Vehicle Type
+							{t("add")}
 						</Button>
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>
-							<DialogTitle>Create Vehicle Type</DialogTitle>
+							<DialogTitle>{t("create")}</DialogTitle>
 						</DialogHeader>
 						<div className="space-y-4">
 							<div>
-								<Label htmlFor="name">Name</Label>
+								<Label htmlFor="name">{t("name")}</Label>
 								<Input
 									id="name"
 									value={formData.name}
@@ -226,7 +241,7 @@ export function VehicleTypesTable() {
 								/>
 							</div>
 							<div>
-								<Label htmlFor="description">Description</Label>
+								<Label htmlFor="description">{t("description")}</Label>
 								<Textarea
 									id="description"
 									value={formData.description}
@@ -236,23 +251,25 @@ export function VehicleTypesTable() {
 								/>
 							</div>
 							<Button onClick={handleCreate} className="w-full">
-								Create Vehicle Type
+								{t("create")}
 							</Button>
 						</div>
 					</DialogContent>
 				</Dialog>
 			</div>
 
-			<DataTable
+			<ResponsiveDataTable
 				data={vehicleTypes}
 				columns={columns}
+				actions={actions}
 				isLoading={loading}
 				pagination={{
 					...pagination,
 					onPageChange: handlePageChange,
 				}}
 				disableSearch={true}
-				emptyMessage="No vehicle types found"
+				emptyMessage={t("noTypesFound")}
+				mobileCardView={true}
 			/>
 
 			<Dialog
@@ -264,11 +281,11 @@ export function VehicleTypesTable() {
 			>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Edit Vehicle Type</DialogTitle>
+						<DialogTitle>{t("edit")}</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4">
 						<div>
-							<Label htmlFor="edit-name">Name</Label>
+							<Label htmlFor="edit-name">{t("name")}</Label>
 							<Input
 								id="edit-name"
 								value={formData.name}
@@ -278,7 +295,7 @@ export function VehicleTypesTable() {
 							/>
 						</div>
 						<div>
-							<Label htmlFor="edit-description">Description</Label>
+							<Label htmlFor="edit-description">{t("description")}</Label>
 							<Textarea
 								id="edit-description"
 								value={formData.description}
@@ -288,7 +305,7 @@ export function VehicleTypesTable() {
 							/>
 						</div>
 						<Button onClick={handleEdit} className="w-full">
-							Update Vehicle Type
+							{t("update")}
 						</Button>
 					</div>
 				</DialogContent>

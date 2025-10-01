@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
+      setIsLoading(true);
       const { data } = await authClient.getSession();
       const newUser = data?.user || null;
       setUser(newUser);
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let sessionCheckInterval: NodeJS.Timeout | undefined;
     
     const initAuth = async () => {
       if (mounted) {
@@ -74,10 +76,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     initAuth();
     
+    // Optional: Set up periodic session check (every 5 minutes)
+    // Only if you need automatic session refresh
+    // sessionCheckInterval = setInterval(() => {
+    //   if (mounted && !isLoading) {
+    //     initAuth();
+    //   }
+    // }, 5 * 60 * 1000); // 5 minutes
+    
     return () => {
       mounted = false;
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
     };
-  }, []); // Remove refreshUser dependency to prevent re-runs
+  }, []); // Empty dependency array to run only once
 
   const contextValue = useMemo(() => ({
     user,

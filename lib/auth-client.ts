@@ -57,7 +57,9 @@ export const profileClient = {
                 throw new Error("No user ID provided");
             }
 
-            const response = await fetch(`/api/users/${targetUserId}`);
+            const response = await fetch(`/api/users/${targetUserId}`, {
+                cache: 'no-store', // Prevent aggressive caching that might cause loops
+            });
             
             if (!response.ok) {
                 const error = await response.json();

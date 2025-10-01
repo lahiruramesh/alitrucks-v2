@@ -1,9 +1,10 @@
 "use client";
 
 import { Calendar, Edit, Phone, Save, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard-layout";
 import { ProtectedRoute } from "@/components/protected-route";
+import { StripeConnectSetup } from "@/components/stripe/stripe-connect-setup";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,8 +47,9 @@ export default function ProfilePage() {
 	const [formData, setFormData] = useState<Partial<UserProfile>>({});
 	const [errors, setErrors] = useState<Record<string, string>>({});
 
-	const fetchProfile = async () => {
+	const fetchProfile = useCallback(async () => {
 		try {
+			setIsLoading(true);
 			const profileData = await profileClient.getProfile();
 			setProfile(profileData);
 			setFormData(profileData);
@@ -56,7 +58,7 @@ export default function ProfilePage() {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		if (user?.id) {
@@ -397,6 +399,9 @@ export default function ProfilePage() {
 
 						{/* Sidebar */}
 						<div className="space-y-6">
+							{/* Stripe Connect Setup for Sellers */}
+							{profile.role === "SELLER" && <StripeConnectSetup />}
+
 							<Card>
 								<CardHeader>
 									<CardTitle className="flex items-center gap-2">
@@ -454,7 +459,7 @@ export default function ProfilePage() {
 											},
 										].map((item, index) => (
 											<div
-												key={index}
+												key={item.label || `profile-item-${index}`}
 												className="flex items-center justify-between"
 											>
 												<span className="text-sm">{item.label}</span>

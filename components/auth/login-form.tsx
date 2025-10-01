@@ -2,7 +2,7 @@
 
 import { Loader2, Truck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -22,6 +22,7 @@ import { authClient } from "@/lib/auth-client";
 
 export function LoginForm() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const t = useTranslations();
 	const { refreshUser } = useAuth();
 	const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +31,9 @@ export function LoginForm() {
 		password: "",
 	});
 	const [errors, setErrors] = useState<Record<string, string>>({});
+
+	// Get return URL from search params
+	const returnUrl = searchParams.get("returnUrl");
 
 	const handleInputChange = (field: string, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -82,14 +86,18 @@ export function LoginForm() {
 			// Refresh user context
 			await refreshUser();
 
-			// Redirect based on user role
-			const userRole = (data?.user as any)?.role;
-			if (userRole === "SELLER") {
-				router.push("/seller");
-			} else if (userRole === "ADMIN") {
-				router.push("/admin");
+			// If there's a return URL, use it; otherwise redirect based on user role
+			if (returnUrl) {
+				router.push(returnUrl);
 			} else {
-				router.push("/dashboard");
+				const userRole = (data?.user as any)?.role;
+				if (userRole === "SELLER") {
+					router.push("/seller");
+				} else if (userRole === "ADMIN") {
+					router.push("/admin");
+				} else {
+					router.push("/dashboard");
+				}
 			}
 		} catch (error) {
 			console.error("Login failed:", error);
@@ -190,7 +198,14 @@ export function LoginForm() {
 							<div className="text-center">
 								<p className="text-sm text-muted-foreground">
 									{t("auth.dontHaveAccount")}{" "}
-									<Link href="/signup" className="text-primary hover:underline">
+									<Link
+										href={
+											returnUrl
+												? `/signup?returnUrl=${encodeURIComponent(returnUrl)}`
+												: "/signup"
+										}
+										className="text-primary hover:underline"
+									>
 										{t("auth.signUpHere")}
 									</Link>
 								</p>

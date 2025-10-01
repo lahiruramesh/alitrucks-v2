@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Next.js Application for Production
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.fixed
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    volumes:
+      # Persistent volume for file uploads
+      - uploads_data:/app/public/uploads
+      # Volume for application logs
+      - app_logs:/app/logs
+      # Optional: Volume for any other persistent data
+      - app_data:/app/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  # Volume for uploaded files (images, documents, etc.)
+  uploads_data:
+    driver: local
+  # Volume for application logs
+  app_logs:
+    driver: local
+  # Volume for any other application data
+  app_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

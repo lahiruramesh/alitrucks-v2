@@ -3,8 +3,6 @@
 import { Filter, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/dashboard-layout";
-import { ProtectedRoute } from "@/components/protected-route";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,10 +13,10 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import {
-	type Action,
-	type Column,
-	DataTable,
-} from "@/components/ui/data-table";
+	type ResponsiveAction,
+	type ResponsiveColumn,
+	ResponsiveDataTable,
+} from "@/components/ui/responsive-data-table";
 import {
 	Select,
 	SelectContent,
@@ -79,19 +77,15 @@ export default function AdminUsersPage() {
 			const data = await response.json();
 
 			setUsers(data.users || []);
-			setPagination(data.pagination || pagination);
+			if (data.pagination) {
+				setPagination(data.pagination);
+			}
 		} catch (error) {
 			console.error("Error fetching users:", error);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [
-		filters.role,
-		filters.userType,
-		pagination.limit,
-		pagination.page,
-		pagination,
-	]);
+	}, [filters.role, filters.userType, pagination.limit, pagination.page]);
 
 	useEffect(() => {
 		fetchUsers();
@@ -181,24 +175,30 @@ export default function AdminUsersPage() {
 		}
 	};
 
-	const columns: Column<User>[] = [
+	const columns: ResponsiveColumn<User>[] = [
 		{
 			key: "name",
 			header: "Name",
+			mobileLabel: "Name",
+			priority: "high",
 			sortable: true,
 			searchable: true,
 		},
 		{
 			key: "email",
 			header: "Email",
+			mobileLabel: "Email",
+			priority: "high",
 			sortable: true,
 			searchable: true,
 		},
 		{
 			key: "role",
 			header: "Role",
+			mobileLabel: "Role",
+			priority: "medium",
 			sortable: true,
-			render: (value) => (
+			render: (value: any) => (
 				<Badge
 					variant={
 						value === "ADMIN"
@@ -215,18 +215,27 @@ export default function AdminUsersPage() {
 		{
 			key: "userType",
 			header: "Type",
+			mobileLabel: "Type",
+			priority: "medium",
 			sortable: true,
-			render: (value) => <Badge variant="outline">{value}</Badge>,
+			hideOnMobile: true,
+			render: (value: any) => <Badge variant="outline">{value}</Badge>,
 		},
 		{
 			key: "companyName",
 			header: "Company",
-			render: (value) => value || "-",
+			mobileLabel: "Company",
+			priority: "low",
+			hideOnMobile: true,
+			render: (value: any) => value || "-",
 		},
 		{
 			key: "city",
 			header: "Location",
-			render: (value, row) => {
+			mobileLabel: "Location",
+			priority: "low",
+			hideOnMobile: true,
+			render: (value: any, row: any) => {
 				if (value && row.country) {
 					return `${value}, ${row.country}`;
 				}
@@ -236,7 +245,10 @@ export default function AdminUsersPage() {
 		{
 			key: "emailVerified",
 			header: "Verified",
-			render: (value) => (
+			mobileLabel: "Verified",
+			priority: "medium",
+			hideOnMobile: true,
+			render: (value: any) => (
 				<Badge variant={value ? "default" : "secondary"}>
 					{value ? "Yes" : "No"}
 				</Badge>
@@ -245,7 +257,9 @@ export default function AdminUsersPage() {
 		{
 			key: "banned",
 			header: "Status",
-			render: (value) => (
+			mobileLabel: "Status",
+			priority: "high",
+			render: (value: any) => (
 				<Badge variant={value ? "destructive" : "default"}>
 					{value ? "Banned" : "Active"}
 				</Badge>
@@ -254,15 +268,18 @@ export default function AdminUsersPage() {
 		{
 			key: "createdAt",
 			header: "Created",
+			mobileLabel: "Created",
+			priority: "low",
 			sortable: true,
-			render: (value) => new Date(value).toLocaleDateString(),
+			hideOnMobile: true,
+			render: (value: any) => new Date(value).toLocaleDateString(),
 		},
 	];
 
-	const actions: Action<User>[] = [
+	const actions: ResponsiveAction<User>[] = [
 		{
 			label: "View Profile",
-			onClick: (user) => {
+			onClick: (user: any) => {
 				// Navigate to user profile
 				window.open(`/admin/users/${user.id}`, "_blank");
 			},
@@ -271,166 +288,160 @@ export default function AdminUsersPage() {
 			label: "Disable User",
 			onClick: handleDisableUser,
 			variant: "destructive",
-			show: (user) => !user.banned && user.role !== "ADMIN",
+			show: (user: any) => !user.banned && user.role !== "ADMIN",
 		},
 		{
 			label: "Enable User",
 			onClick: handleEnableUser,
-			show: (user) => user.banned,
+			show: (user: any) => user.banned,
 		},
 		{
 			label: "Delete User",
 			onClick: handleDeleteUser,
 			variant: "destructive",
-			show: (user) => user.role !== "ADMIN",
+			show: (user: any) => user.role !== "ADMIN",
 		},
 	];
 
 	return (
-		<ProtectedRoute allowedRoles={["ADMIN"]}>
-			<DashboardLayout>
-				<div className="flex flex-1 flex-col gap-4 p-4">
-					<div className="flex justify-between items-center">
-						<div>
-							<h1 className="text-2xl font-bold text-foreground">
-								User Management
-							</h1>
-							<p className="text-muted-foreground">
-								Manage platform users and their permissions
-							</p>
-						</div>
-					</div>
-
-					{/* Stats Cards */}
-					<div className="grid gap-4 md:grid-cols-4">
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Total Users
-								</CardTitle>
-								<Users className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">{pagination.total}</div>
-							</CardContent>
-						</Card>
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">
-									Active Users
-								</CardTitle>
-								<Users className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{users.filter((u) => !u.banned).length}
-								</div>
-							</CardContent>
-						</Card>
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">Sellers</CardTitle>
-								<Users className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{users.filter((u) => u.role === "SELLER").length}
-								</div>
-							</CardContent>
-						</Card>
-						<Card>
-							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">Buyers</CardTitle>
-								<Users className="h-4 w-4 text-muted-foreground" />
-							</CardHeader>
-							<CardContent>
-								<div className="text-2xl font-bold">
-									{users.filter((u) => u.role === "BUYER").length}
-								</div>
-							</CardContent>
-						</Card>
-					</div>
-
-					{/* Filters */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Filter className="h-4 w-4" />
-								Filters
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="flex gap-4">
-								<div className="flex-1">
-									<Select
-										value={filters.role}
-										onValueChange={(value) =>
-											setFilters((prev) => ({ ...prev, role: value }))
-										}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Filter by role" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">All Roles</SelectItem>
-											<SelectItem value="ADMIN">Admin</SelectItem>
-											<SelectItem value="SELLER">Seller</SelectItem>
-											<SelectItem value="BUYER">Buyer</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<div className="flex-1">
-									<Select
-										value={filters.userType}
-										onValueChange={(value) =>
-											setFilters((prev) => ({ ...prev, userType: value }))
-										}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Filter by type" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="all">All Types</SelectItem>
-											<SelectItem value="INDIVIDUAL">Individual</SelectItem>
-											<SelectItem value="FLEET">Fleet</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<Button
-									variant="outline"
-									onClick={() => setFilters({ role: "all", userType: "all" })}
-								>
-									Clear Filters
-								</Button>
-							</div>
-						</CardContent>
-					</Card>
-
-					{/* Users Table */}
-					<Card>
-						<CardHeader>
-							<CardTitle>Users</CardTitle>
-							<CardDescription>
-								A list of all users registered on the platform
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<DataTable
-								data={users}
-								columns={columns}
-								actions={actions}
-								searchPlaceholder="Search users by name or email..."
-								emptyMessage="No users found"
-								isLoading={isLoading}
-								pagination={{
-									...pagination,
-									onPageChange: handlePageChange,
-								}}
-							/>
-						</CardContent>
-					</Card>
+		<div className="flex flex-1 flex-col gap-4 p-4">
+			<div className="flex justify-between items-center">
+				<div>
+					<h1 className="text-2xl font-bold text-foreground">
+						User Management
+					</h1>
+					<p className="text-muted-foreground">
+						Manage platform users and their permissions
+					</p>
 				</div>
-			</DashboardLayout>
-		</ProtectedRoute>
+			</div>
+
+			{/* Stats Cards */}
+			<div className="grid gap-4 md:grid-cols-4">
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Total Users</CardTitle>
+						<Users className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">{pagination.total}</div>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Active Users</CardTitle>
+						<Users className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">
+							{users.filter((u) => !u.banned).length}
+						</div>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Sellers</CardTitle>
+						<Users className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">
+							{users.filter((u) => u.role === "SELLER").length}
+						</div>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+						<CardTitle className="text-sm font-medium">Buyers</CardTitle>
+						<Users className="h-4 w-4 text-muted-foreground" />
+					</CardHeader>
+					<CardContent>
+						<div className="text-2xl font-bold">
+							{users.filter((u) => u.role === "BUYER").length}
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+
+			{/* Filters */}
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<Filter className="h-4 w-4" />
+						Filters
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+						<div className="flex-1 min-w-0">
+							<Select
+								value={filters.role}
+								onValueChange={(value) =>
+									setFilters((prev) => ({ ...prev, role: value }))
+								}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Filter by role" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All Roles</SelectItem>
+									<SelectItem value="ADMIN">Admin</SelectItem>
+									<SelectItem value="SELLER">Seller</SelectItem>
+									<SelectItem value="BUYER">Buyer</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="flex-1 min-w-0">
+							<Select
+								value={filters.userType}
+								onValueChange={(value) =>
+									setFilters((prev) => ({ ...prev, userType: value }))
+								}
+							>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Filter by type" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All Types</SelectItem>
+									<SelectItem value="INDIVIDUAL">Individual</SelectItem>
+									<SelectItem value="FLEET">Fleet</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<Button
+							variant="outline"
+							onClick={() => setFilters({ role: "all", userType: "all" })}
+							className="w-full sm:w-auto whitespace-nowrap"
+						>
+							Clear Filters
+						</Button>
+					</div>
+				</CardContent>
+			</Card>
+
+			{/* Users Table */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Users</CardTitle>
+					<CardDescription>
+						A list of all users registered on the platform
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<ResponsiveDataTable
+						data={users}
+						columns={columns}
+						actions={actions}
+						searchPlaceholder="Search users by name or email..."
+						emptyMessage="No users found"
+						isLoading={isLoading}
+						mobileCardView={true}
+						pagination={{
+							...pagination,
+							onPageChange: handlePageChange,
+						}}
+					/>
+				</CardContent>
+			</Card>
+		</div>
 	);
 }

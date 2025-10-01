@@ -1,10 +1,10 @@
 "use client";
 
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import {
 	Dialog,
 	DialogContent,
@@ -21,6 +21,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { DataTable } from "../ui/data-table";
 
 interface Model {
 	id: string;
@@ -41,6 +42,9 @@ interface Make {
 }
 
 export function ModelsTable() {
+	const _t = useTranslations("admin.vehicleManagement.models");
+	const _tCommon = useTranslations("common");
+
 	const [models, setModels] = useState<Model[]>([]);
 	const [makes, setMakes] = useState<Make[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -59,7 +63,7 @@ export function ModelsTable() {
 		makeId: "",
 	});
 
-	const fetchMakes = async () => {
+	const fetchMakes = useCallback(async () => {
 		try {
 			const response = await fetch("/api/admin/makes?limit=1000");
 			if (!response.ok) throw new Error("Failed to fetch makes");
@@ -68,33 +72,36 @@ export function ModelsTable() {
 		} catch (_error) {
 			toast.error("Failed to fetch makes");
 		}
-	};
+	}, []);
 
-	const fetchModels = async (page = 1, searchTerm = "", makeId = "") => {
-		try {
-			setLoading(true);
-			const params = new URLSearchParams({
-				page: page.toString(),
-				limit: pagination.limit.toString(),
-				search: searchTerm,
-			});
+	const fetchModels = useCallback(
+		async (page = 1, searchTerm = "", makeId = "") => {
+			try {
+				setLoading(true);
+				const params = new URLSearchParams({
+					page: page.toString(),
+					limit: pagination.limit.toString(),
+					search: searchTerm,
+				});
 
-			if (makeId) {
-				params.append("makeId", makeId);
+				if (makeId) {
+					params.append("makeId", makeId);
+				}
+
+				const response = await fetch(`/api/admin/models?${params}`);
+				if (!response.ok) throw new Error("Failed to fetch models");
+
+				const data = await response.json();
+				setModels(data.models);
+				setPagination(data.pagination);
+			} catch (_error) {
+				toast.error("Failed to fetch models");
+			} finally {
+				setLoading(false);
 			}
-
-			const response = await fetch(`/api/admin/models?${params}`);
-			if (!response.ok) throw new Error("Failed to fetch models");
-
-			const data = await response.json();
-			setModels(data.models);
-			setPagination(data.pagination);
-		} catch (_error) {
-			toast.error("Failed to fetch models");
-		} finally {
-			setLoading(false);
-		}
-	};
+		},
+		[pagination.limit],
+	);
 
 	useEffect(() => {
 		fetchMakes();
